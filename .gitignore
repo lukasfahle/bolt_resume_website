@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+.env
+.DS_Store
+.vscode/
+.DS_Store
+/.idea/
+# TypeScript
+*.tsbuildinfo
+# logs
+npm-debug.log*
+pnpm-debug.log*
+.yarn-debug.log*
+# build outputs
+out/

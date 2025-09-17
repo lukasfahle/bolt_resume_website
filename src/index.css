@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.caption-wrap {
+  @apply h-[88px] overflow-hidden;
+}
