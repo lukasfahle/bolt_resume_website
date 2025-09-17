@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, MapPin, Calendar, ExternalLink, X, ChevronRight, Download, ChevronDown } from 'lucide-react';
+import { Mail, Calendar, X, Download, UserPlus } from 'lucide-react';
 
 // Add styles at the top of the file
 const styles = `
@@ -58,13 +58,36 @@ interface Entry {
 function App() {
   const [scrollY, setScrollY] = useState(0);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  const [showAdditionLukasp, setShowAdditionLukasp] = useState(false);
-  const [bentoFilter, setBentoFilter] = useState<'Roles' | 'Projects' | 'Degrees/Certifications' | 'Thoughts'>('Roles');
   const [viewAll, setViewAll] = useState(false);
   const [allFilter, setAllFilter] = useState<'All' | Category>('All');
   const experienceRef = useRef<HTMLDivElement>(null);
   const currentRoleRef = useRef<HTMLDivElement>(null);
-  const pastRolesRef = useRef<HTMLDivElement>(null);
+
+  const actionButtons = [
+    {
+      label: 'Download CV',
+      href: '/cv.pdf',
+      icon: Download,
+      style:
+        'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black shadow-sm',
+      download: true,
+    },
+    {
+      label: 'Schedule meeting',
+      href: 'https://calendar.app.google/qwtTxZU1SGSysZFP7',
+      icon: Calendar,
+      style:
+        'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black shadow-sm',
+      external: true,
+    },
+    {
+      label: 'Connect',
+      href: 'https://www.linkedin.com/in/lukasfahle/',
+      icon: UserPlus,
+      style: 'bg-orange-800 text-white hover:bg-orange-700 shadow-md',
+      external: true,
+    },
+  ] as const;
 
   const entries: Entry[] = [
     {
@@ -173,9 +196,7 @@ function App() {
     setSelectedEntry(null);
   };
 
-  const closeAdditionLukaspModal = () => {
-    setShowAdditionLukasp(false);
-  };
+  const isScrolled = scrollY > 120;
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -267,30 +288,45 @@ function App() {
             </div>
 
             <div className="flex flex-col gap-6">
-              <div className="flex gap-4 justify-center lg:justify-start">
-                <a
-                  href="/cv.pdf"
-                  download
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 hover:text-black text-sm"
-                >
-                  Download CV
-                </a>
-                <a
-                  href="https://calendar.app.google/qwtTxZU1SGSysZFP7"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 hover:text-black text-sm"
-                >
-                  Schedule meeting
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/lukasfahle/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-orange-800 hover:bg-orange-700 transition-colors duration-200 text-white text-sm"
-                >
-                  Connect
-                </a>
+              <div
+                className={`flex gap-4 justify-center lg:justify-start transition-all duration-500 ease-in-out ${
+                  isScrolled
+                    ? 'fixed right-4 top-1/2 z-50 -translate-y-1/2 flex-col gap-3'
+                    : ''
+                }`}
+              >
+                {actionButtons.map(({ label, href, icon: Icon, style, download, external }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    {...(download ? { download: true } : {})}
+                    {...(external
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                    aria-label={label}
+                    title={label}
+                    className={`group inline-flex items-center rounded-full text-sm font-medium transition-all duration-500 ease-in-out ${
+                      isScrolled
+                        ? 'h-12 w-12 justify-center px-0 py-0 shadow-lg'
+                        : 'px-4 py-2'
+                    } ${style}`}
+                  >
+                    <Icon
+                      className={`h-4 w-4 transition-transform duration-500 ease-in-out ${
+                        isScrolled ? 'scale-105' : 'scale-100'
+                      }`}
+                    />
+                    <span
+                      className={`ml-2 whitespace-nowrap transition-[opacity,transform,width] duration-300 ease-in-out ${
+                        isScrolled
+                          ? 'w-0 -translate-x-2 overflow-hidden opacity-0'
+                          : 'w-auto translate-x-0 opacity-100'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </a>
+                ))}
               </div>
             </div>
           </div>
