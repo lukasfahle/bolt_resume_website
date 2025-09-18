@@ -317,10 +317,10 @@ function App() {
                       }`}
                     />
                     <span
-                      className={`ml-2 whitespace-nowrap transition-[opacity,transform,width] duration-300 ease-in-out ${
+                      className={`whitespace-nowrap transition-[opacity,transform,width,margin] duration-300 ease-in-out ${
                         isScrolled
-                          ? 'w-0 -translate-x-2 overflow-hidden opacity-0'
-                          : 'w-auto translate-x-0 opacity-100'
+                          ? 'ml-0 w-0 -translate-x-2 overflow-hidden opacity-0'
+                          : 'ml-2 w-auto translate-x-0 opacity-100'
                       }`}
                     >
                       {label}
