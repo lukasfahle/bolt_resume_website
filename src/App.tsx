@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Calendar, X, Download, UserPlus } from 'lucide-react';
+import { Mail, Calendar, X, Download, UserPlus, type LucideIcon } from 'lucide-react';
 
 // Add styles at the top of the file
 const styles = `
@@ -37,10 +37,107 @@ const styles = `
   .shiny-text.disabled {
     animation: none;
   }
+
+  .cta-glass {
+    position: relative;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.12));
+    box-shadow: 0 18px 40px var(--glass-glow, rgba(15, 23, 42, 0.18));
+    color: inherit;
+    overflow: hidden;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    transition: box-shadow 0.5s ease, transform 0.5s ease, border-color 0.5s ease;
+  }
+
+  .cta-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05));
+    opacity: 0.85;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  .cta-glass::before {
+    content: '';
+    position: absolute;
+    inset: -120% -30% 40%;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.75), transparent 55%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  .cta-glass:hover::before {
+    opacity: 0.55;
+  }
+
+  .cta-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 52px var(--glass-glow, rgba(15, 23, 42, 0.22));
+  }
+
+  .cta-glass[data-condensed='true'] {
+    box-shadow: 0 20px 45px var(--glass-glow, rgba(15, 23, 42, 0.22));
+  }
+
+  .cta-glass .icon,
+  .cta-glass .label {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-glass:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 3px;
+  }
+
+  .cta-glass[data-variant='sky'] {
+    --glass-glow: rgba(56, 189, 248, 0.35);
+    color: #082f49;
+  }
+
+  .cta-glass[data-variant='sky']::after {
+    background: linear-gradient(135deg, rgba(125, 211, 252, 0.55), rgba(255, 255, 255, 0.08));
+  }
+
+  .cta-glass[data-variant='emerald'] {
+    --glass-glow: rgba(16, 185, 129, 0.32);
+    color: #064e3b;
+  }
+
+  .cta-glass[data-variant='emerald']::after {
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.55), rgba(255, 255, 255, 0.08));
+  }
+
+  .cta-glass[data-variant='peach'] {
+    --glass-glow: rgba(249, 115, 22, 0.42);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+
+  .cta-glass[data-variant='peach']::after {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.7), rgba(255, 255, 255, 0.08));
+  }
 `;
 
 type Category = 'Role' | 'Project' | 'Degree/Certification' | 'Thought';
 type Tag = 'Industry' | 'Academia' | 'Private';
+
+type ActionVariant = 'sky' | 'emerald' | 'peach';
+
+interface ActionButton {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  variant: ActionVariant;
+  download?: boolean;
+  external?: boolean;
+}
 
 interface Entry {
   id: number;
@@ -63,31 +160,29 @@ function App() {
   const experienceRef = useRef<HTMLDivElement>(null);
   const currentRoleRef = useRef<HTMLDivElement>(null);
 
-  const actionButtons = [
+  const actionButtons: ActionButton[] = [
     {
       label: 'Download CV',
       href: '/cv.pdf',
       icon: Download,
-      style:
-        'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black shadow-sm',
+      variant: 'sky',
       download: true,
     },
     {
       label: 'Schedule meeting',
       href: 'https://calendar.app.google/qwtTxZU1SGSysZFP7',
       icon: Calendar,
-      style:
-        'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black shadow-sm',
+      variant: 'emerald',
       external: true,
     },
     {
       label: 'Connect',
       href: 'https://www.linkedin.com/in/lukasfahle/',
       icon: UserPlus,
-      style: 'bg-orange-800 text-white hover:bg-orange-700 shadow-md',
+      variant: 'peach',
       external: true,
     },
-  ] as const;
+  ];
 
   const entries: Entry[] = [
     {
@@ -295,7 +390,7 @@ function App() {
                     : ''
                 }`}
               >
-                {actionButtons.map(({ label, href, icon: Icon, style, download, external }) => (
+                {actionButtons.map(({ label, href, icon: Icon, variant, download, external }) => (
                   <a
                     key={label}
                     href={href}
@@ -305,19 +400,21 @@ function App() {
                       : {})}
                     aria-label={label}
                     title={label}
-                    className={`group inline-flex items-center rounded-full text-sm font-medium transition-all duration-500 ease-in-out ${
+                    data-variant={variant}
+                    data-condensed={isScrolled ? 'true' : 'false'}
+                    className={`cta-glass group inline-flex items-center rounded-full text-sm font-medium transition-all duration-500 ease-in-out focus-visible:outline-none ${
                       isScrolled
-                        ? 'h-12 w-12 justify-center px-0 py-0 shadow-lg'
-                        : 'px-4 py-2'
-                    } ${style}`}
+                        ? 'h-12 w-12 justify-center px-0 py-0'
+                        : 'px-5 py-3'
+                    }`}
                   >
                     <Icon
-                      className={`h-4 w-4 transition-transform duration-500 ease-in-out ${
+                      className={`icon relative z-10 h-4 w-4 transition-transform duration-500 ease-in-out ${
                         isScrolled ? 'scale-105' : 'scale-100'
                       }`}
                     />
                     <span
-                      className={`whitespace-nowrap transition-[opacity,transform,width,margin] duration-300 ease-in-out ${
+                      className={`label relative z-10 whitespace-nowrap transition-[opacity,transform,width,margin] duration-300 ease-in-out ${
                         isScrolled
                           ? 'ml-0 w-0 -translate-x-2 overflow-hidden opacity-0'
                           : 'ml-2 w-auto translate-x-0 opacity-100'
