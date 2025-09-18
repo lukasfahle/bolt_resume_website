@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, MapPin, Calendar, ExternalLink, X, ChevronRight, Download, ChevronDown } from 'lucide-react';
+import { Mail, Calendar, X, Download, UserPlus, type LucideIcon } from 'lucide-react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 // Add styles at the top of the file
 const styles = `
@@ -37,10 +38,105 @@ const styles = `
   .shiny-text.disabled {
     animation: none;
   }
+
+  .cta-glass {
+    position: relative;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.12));
+    box-shadow: 0 18px 40px var(--glass-glow, rgba(15, 23, 42, 0.18));
+    color: inherit;
+    overflow: hidden;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    transition: box-shadow 0.5s ease, transform 0.5s ease, border-color 0.5s ease;
+  }
+
+  .cta-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05));
+    opacity: 0.85;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  .cta-glass::before {
+    content: '';
+    position: absolute;
+    inset: -120% -30% 40%;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.75), transparent 55%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  .cta-glass:hover::before {
+    opacity: 0.55;
+  }
+
+  .cta-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 52px var(--glass-glow, rgba(15, 23, 42, 0.22));
+  }
+
+  .cta-glass[data-condensed='true'] {
+    box-shadow: 0 20px 45px var(--glass-glow, rgba(15, 23, 42, 0.22));
+  }
+
+  .cta-glass .icon,
+  .cta-glass .label {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-glass:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 3px;
+  }
+
+  .cta-glass[data-variant='sky'] {
+    --glass-glow: rgba(15, 23, 42, 0.18);
+  }
+
+  .cta-glass[data-variant='sky']::after {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08));
+  }
+
+  .cta-glass[data-variant='emerald'] {
+    --glass-glow: rgba(15, 23, 42, 0.18);
+  }
+
+  .cta-glass[data-variant='emerald']::after {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08));
+  }
+
+  .cta-glass[data-variant='peach'] {
+    --glass-glow: rgba(249, 115, 22, 0.42);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+
+  .cta-glass[data-variant='peach']::after {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.7), rgba(255, 255, 255, 0.08));
+  }
 `;
 
 type Category = 'Role' | 'Project' | 'Degree/Certification' | 'Thought';
 type Tag = 'Industry' | 'Academia' | 'Private';
+
+type ActionVariant = 'sky' | 'emerald' | 'peach';
+
+interface ActionButton {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  variant: ActionVariant;
+  download?: boolean;
+  external?: boolean;
+}
 
 interface Entry {
   id: number;
@@ -56,15 +152,37 @@ interface Entry {
 }
 
 function App() {
-  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  const [showAdditionLukasp, setShowAdditionLukasp] = useState(false);
-  const [bentoFilter, setBentoFilter] = useState<'Roles' | 'Projects' | 'Degrees/Certifications' | 'Thoughts'>('Roles');
   const [viewAll, setViewAll] = useState(false);
   const [allFilter, setAllFilter] = useState<'All' | Category>('All');
   const experienceRef = useRef<HTMLDivElement>(null);
   const currentRoleRef = useRef<HTMLDivElement>(null);
-  const pastRolesRef = useRef<HTMLDivElement>(null);
+  const scrollStateRef = useRef(false);
+
+  const actionButtons: ActionButton[] = [
+    {
+      label: 'Download CV',
+      href: '/cv.pdf',
+      icon: Download,
+      variant: 'sky',
+      download: true,
+    },
+    {
+      label: 'Schedule meeting',
+      href: 'https://calendar.app.google/qwtTxZU1SGSysZFP7',
+      icon: Calendar,
+      variant: 'emerald',
+      external: true,
+    },
+    {
+      label: 'Connect',
+      href: 'https://www.linkedin.com/in/lukasfahle/',
+      icon: UserPlus,
+      variant: 'peach',
+      external: true,
+    },
+  ];
 
   const entries: Entry[] = [
     {
@@ -146,9 +264,14 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      const nextScrolled = window.scrollY > 120;
+      if (scrollStateRef.current !== nextScrolled) {
+        scrollStateRef.current = nextScrolled;
+        setIsScrolled(nextScrolled);
+      }
     };
 
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -173,9 +296,72 @@ function App() {
     setSelectedEntry(null);
   };
 
-  const closeAdditionLukaspModal = () => {
-    setShowAdditionLukasp(false);
-  };
+  const containerTransition = {
+    type: 'spring',
+    stiffness: 220,
+    damping: 28,
+    mass: 1.05,
+  } as const;
+
+  const buttonTransition = {
+    type: 'spring',
+    stiffness: 420,
+    damping: 35,
+    mass: 0.9,
+  } as const;
+
+  const labelTransition = {
+    type: 'spring',
+    stiffness: 360,
+    damping: 30,
+    mass: 0.75,
+  } as const;
+
+  const renderActionButtons = (condensed: boolean) =>
+    actionButtons.map(({ label, href, icon: Icon, variant, download, external }) => (
+      <motion.a
+        key={label}
+        layout
+        layoutId={`cta-${label}`}
+        href={href}
+        {...(download ? { download: true } : {})}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        aria-label={label}
+        title={label}
+        data-variant={variant}
+        data-condensed={condensed ? 'true' : 'false'}
+        className={`cta-glass group inline-flex items-center rounded-full text-sm font-medium focus-visible:outline-none ${
+          condensed ? 'h-12 w-12 justify-center px-0 py-0' : 'px-5 py-3'
+        }`}
+        transition={buttonTransition}
+        whileHover={{ scale: condensed ? 1.08 : 1.03 }}
+        whileTap={{ scale: condensed ? 0.95 : 0.98 }}
+      >
+        <motion.span
+          layout
+          className="icon relative z-10 flex h-4 w-4 items-center justify-center"
+          animate={{ scale: condensed ? 1.08 : 1 }}
+          transition={buttonTransition}
+        >
+          <Icon className="h-4 w-4" />
+        </motion.span>
+        <AnimatePresence initial={false}>
+          {!condensed && (
+            <motion.span
+              key="label"
+              layout
+              className="label relative z-10 ml-2 whitespace-nowrap"
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={labelTransition}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.a>
+    ));
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -266,33 +452,31 @@ function App() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="flex gap-4 justify-center lg:justify-start">
-                <a
-                  href="/cv.pdf"
-                  download
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 hover:text-black text-sm"
-                >
-                  Download CV
-                </a>
-                <a
-                  href="https://calendar.app.google/qwtTxZU1SGSysZFP7"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 hover:text-black text-sm"
-                >
-                  Schedule meeting
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/lukasfahle/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 rounded-full bg-orange-800 hover:bg-orange-700 transition-colors duration-200 text-white text-sm"
-                >
-                  Connect
-                </a>
+            <LayoutGroup id="hero-cta">
+              <div className="flex flex-col gap-6">
+                <div className="relative min-h-[64px]">
+                  <motion.div
+                    layout
+                    layoutScroll
+                    initial={false}
+                    transition={containerTransition}
+                    data-condensed={isScrolled ? 'true' : 'false'}
+                    className={`pointer-events-auto ${
+                      isScrolled
+                        ? 'fixed right-4 top-1/2 z-50 flex -translate-y-1/2 flex-col items-end gap-3'
+                        : 'flex flex-wrap justify-center gap-4 lg:justify-start'
+                    }`}
+                    animate={{
+                      opacity: 1,
+                      scale: isScrolled ? 0.98 : 1,
+                      filter: 'blur(0px)',
+                    }}
+                  >
+                    {renderActionButtons(isScrolled)}
+                  </motion.div>
+                </div>
               </div>
-            </div>
+            </LayoutGroup>
           </div>
         </div>
       </section>
