@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Calendar, X, Download, UserPlus, type LucideIcon } from 'lucide-react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 // Add styles at the top of the file
 const styles = `
@@ -291,6 +292,73 @@ function App() {
 
   const isScrolled = scrollY > 120;
 
+  const containerTransition = {
+    type: 'spring',
+    stiffness: 220,
+    damping: 28,
+    mass: 1.05,
+  } as const;
+
+  const buttonTransition = {
+    type: 'spring',
+    stiffness: 420,
+    damping: 35,
+    mass: 0.9,
+  } as const;
+
+  const labelTransition = {
+    type: 'spring',
+    stiffness: 360,
+    damping: 30,
+    mass: 0.75,
+  } as const;
+
+  const renderActionButtons = (condensed: boolean) =>
+    actionButtons.map(({ label, href, icon: Icon, variant, download, external }) => (
+      <motion.a
+        key={label}
+        layout
+        layoutId={`cta-${label}`}
+        href={href}
+        {...(download ? { download: true } : {})}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        aria-label={label}
+        title={label}
+        data-variant={variant}
+        data-condensed={condensed ? 'true' : 'false'}
+        className={`cta-glass group inline-flex items-center rounded-full text-sm font-medium focus-visible:outline-none ${
+          condensed ? 'h-12 w-12 justify-center px-0 py-0' : 'px-5 py-3'
+        }`}
+        transition={buttonTransition}
+        whileHover={{ scale: condensed ? 1.08 : 1.03 }}
+        whileTap={{ scale: condensed ? 0.95 : 0.98 }}
+      >
+        <motion.span
+          layout
+          className="icon relative z-10 flex h-4 w-4 items-center justify-center"
+          animate={{ scale: condensed ? 1.08 : 1 }}
+          transition={buttonTransition}
+        >
+          <Icon className="h-4 w-4" />
+        </motion.span>
+        <AnimatePresence initial={false}>
+          {!condensed && (
+            <motion.span
+              key="label"
+              layout
+              className="label relative z-10 ml-2 whitespace-nowrap"
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={labelTransition}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.a>
+    ));
+
   return (
     <div className="min-h-screen bg-white text-black">
       <style>{styles}</style>
@@ -380,50 +448,39 @@ function App() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div
-                className={`flex gap-4 justify-center lg:justify-start transition-all duration-500 ease-in-out ${
-                  isScrolled
-                    ? 'fixed right-4 top-1/2 z-50 -translate-y-1/2 flex-col gap-3'
-                    : ''
-                }`}
-              >
-                {actionButtons.map(({ label, href, icon: Icon, variant, download, external }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    {...(download ? { download: true } : {})}
-                    {...(external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
-                    aria-label={label}
-                    title={label}
-                    data-variant={variant}
-                    data-condensed={isScrolled ? 'true' : 'false'}
-                    className={`cta-glass group inline-flex items-center rounded-full text-sm font-medium transition-all duration-500 ease-in-out focus-visible:outline-none ${
-                      isScrolled
-                        ? 'h-12 w-12 justify-center px-0 py-0'
-                        : 'px-5 py-3'
-                    }`}
-                  >
-                    <Icon
-                      className={`icon relative z-10 h-4 w-4 transition-transform duration-500 ease-in-out ${
-                        isScrolled ? 'scale-105' : 'scale-100'
-                      }`}
-                    />
-                    <span
-                      className={`label relative z-10 whitespace-nowrap transition-[opacity,transform,width,margin] duration-300 ease-in-out ${
-                        isScrolled
-                          ? 'ml-0 w-0 -translate-x-2 overflow-hidden opacity-0'
-                          : 'ml-2 w-auto translate-x-0 opacity-100'
-                      }`}
-                    >
-                      {label}
-                    </span>
-                  </a>
-                ))}
+            <LayoutGroup id="hero-cta">
+              <div className="flex flex-col gap-6">
+                <div className="relative min-h-[64px]">
+                  <AnimatePresence mode="popLayout">
+                    {isScrolled ? (
+                      <motion.div
+                        key="cta-floating"
+                        layoutId="cta-stack"
+                        className="fixed right-4 top-1/2 z-50 flex flex-col items-end gap-3"
+                        initial={{ opacity: 0, x: 56, y: '-46%', scale: 0.9, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, x: 0, y: '-50%', scale: 1, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, x: 56, y: '-46%', scale: 0.9, filter: 'blur(6px)' }}
+                        transition={containerTransition}
+                      >
+                        {renderActionButtons(true)}
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="cta-inline"
+                        layoutId="cta-stack"
+                        className="flex flex-wrap justify-center gap-4 lg:justify-start"
+                        initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
+                        transition={containerTransition}
+                      >
+                        {renderActionButtons(false)}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
+            </LayoutGroup>
           </div>
         </div>
       </section>
