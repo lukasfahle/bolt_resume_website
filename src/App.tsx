@@ -97,21 +97,19 @@ const styles = `
   }
 
   .cta-glass[data-variant='sky'] {
-    --glass-glow: rgba(56, 189, 248, 0.35);
-    color: #082f49;
+    --glass-glow: rgba(15, 23, 42, 0.18);
   }
 
   .cta-glass[data-variant='sky']::after {
-    background: linear-gradient(135deg, rgba(125, 211, 252, 0.55), rgba(255, 255, 255, 0.08));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08));
   }
 
   .cta-glass[data-variant='emerald'] {
-    --glass-glow: rgba(16, 185, 129, 0.32);
-    color: #064e3b;
+    --glass-glow: rgba(15, 23, 42, 0.18);
   }
 
   .cta-glass[data-variant='emerald']::after {
-    background: linear-gradient(135deg, rgba(167, 243, 208, 0.55), rgba(255, 255, 255, 0.08));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08));
   }
 
   .cta-glass[data-variant='peach'] {
