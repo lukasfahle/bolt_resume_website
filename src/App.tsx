@@ -152,12 +152,13 @@ interface Entry {
 }
 
 function App() {
-  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [viewAll, setViewAll] = useState(false);
   const [allFilter, setAllFilter] = useState<'All' | Category>('All');
   const experienceRef = useRef<HTMLDivElement>(null);
   const currentRoleRef = useRef<HTMLDivElement>(null);
+  const scrollStateRef = useRef(false);
 
   const actionButtons: ActionButton[] = [
     {
@@ -263,9 +264,14 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      const nextScrolled = window.scrollY > 120;
+      if (scrollStateRef.current !== nextScrolled) {
+        scrollStateRef.current = nextScrolled;
+        setIsScrolled(nextScrolled);
+      }
     };
 
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -289,8 +295,6 @@ function App() {
   const closeModal = () => {
     setSelectedEntry(null);
   };
-
-  const isScrolled = scrollY > 120;
 
   const containerTransition = {
     type: 'spring',
@@ -451,33 +455,25 @@ function App() {
             <LayoutGroup id="hero-cta">
               <div className="flex flex-col gap-6">
                 <div className="relative min-h-[64px]">
-                  <AnimatePresence mode="popLayout">
-                    {isScrolled ? (
-                      <motion.div
-                        key="cta-floating"
-                        layoutId="cta-stack"
-                        className="fixed right-4 top-1/2 z-50 flex flex-col items-end gap-3"
-                        initial={{ opacity: 0, x: 56, y: '-46%', scale: 0.9, filter: 'blur(6px)' }}
-                        animate={{ opacity: 1, x: 0, y: '-50%', scale: 1, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, x: 56, y: '-46%', scale: 0.9, filter: 'blur(6px)' }}
-                        transition={containerTransition}
-                      >
-                        {renderActionButtons(true)}
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="cta-inline"
-                        layoutId="cta-stack"
-                        className="flex flex-wrap justify-center gap-4 lg:justify-start"
-                        initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
-                        transition={containerTransition}
-                      >
-                        {renderActionButtons(false)}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <motion.div
+                    layout
+                    layoutScroll
+                    initial={false}
+                    transition={containerTransition}
+                    data-condensed={isScrolled ? 'true' : 'false'}
+                    className={`pointer-events-auto ${
+                      isScrolled
+                        ? 'fixed right-4 top-1/2 z-50 flex -translate-y-1/2 flex-col items-end gap-3'
+                        : 'flex flex-wrap justify-center gap-4 lg:justify-start'
+                    }`}
+                    animate={{
+                      opacity: 1,
+                      scale: isScrolled ? 0.98 : 1,
+                      filter: 'blur(0px)',
+                    }}
+                  >
+                    {renderActionButtons(isScrolled)}
+                  </motion.div>
                 </div>
               </div>
             </LayoutGroup>
